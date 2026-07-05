@@ -77,6 +77,31 @@ app.post("/otp",async (req, res) => {
 
 
 
+ app.post("/email",async (req, res) => {
+    const job = await redis.lpush("queue:email", JSON.stringify({
+        to: req.body.to,
+        subject: req.body.subject,
+        body: req.body.body,
+        createdAt: new Date().toISOString()
+    }))
+
+
+    return res.json({ message: "Email job added to queue", jobId: job })
+ })
+
+
+ app.get("/email/consume", async (req, res) => {
+    const job = await redis.rpop("queue:email")
+    if(!job) {
+        return res.status(404).json({ message: "No email jobs in queue" })
+    }
+    const emailJob = JSON.parse(job)
+    console.log("Processing email job:", emailJob)
+    return res.json({ message: "Email job processed", job: emailJob })
+ }
+ )  
+
+
 const BANNER_KEY = "banner"
 
 app.get("/banner", async (req, res) => {
