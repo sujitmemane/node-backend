@@ -10,6 +10,33 @@ app.use(express.json())
 const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379")
 
 
+
+
+app.post("/user", async (req, res) => {
+    const { name, email } = req.body    
+   await redis.hset(`user:${email}`, {
+    name,email
+   })
+
+   return res.json({ message: "User created successfully" })
+
+ })
+
+
+
+
+ app.get("/user/:email", async (req, res) => {
+    const { email } = req.params
+    const user = await redis.hgetall(`user:${email}`)
+    if(!user || Object.keys(user).length === 0) {
+        return res.status(404).json({ message: "User not found" })
+    }
+    return res.json({ user })
+ })
+
+
+
+
 function otpKey(phoneNumber) {
     return `otp:${phoneNumber}`
 }
@@ -50,24 +77,24 @@ app.post("/otp",async (req, res) => {
 
 
 
-// const BANNER_KEY = "banner"
+const BANNER_KEY = "banner"
 
-// app.get("/banner", async (req, res) => {
-//     const banner = await redis.get(BANNER_KEY)
-//     return res.json({ banner })
-// })
+app.get("/banner", async (req, res) => {
+    const banner = await redis.get(BANNER_KEY)
+    return res.json({ banner })
+})
 
-// app.post("/banner", async (req, res) => {
-//     console.log(req.body,"REQ_BODU")
-//     const { banner } = req.body
-//     await redis.set(BANNER_KEY, banner)
-//     return res.json({ banner })
-// })
+app.post("/banner", async (req, res) => {
+    console.log(req.body,"REQ_BODU")
+    const { banner } = req.body
+    await redis.set(BANNER_KEY, banner)
+    return res.json({ banner })
+})
 
-// app.get("/", async (req, res) => {    
-//     const reply = await redis.ping()
-//     return res.json(`Redis is working: ${reply}`)
-//   })
+app.get("/", async (req, res) => {    
+    const reply = await redis.ping()
+    return res.json(`Redis is working: ${reply}`)
+  })
 
 
 
